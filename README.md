@@ -2,6 +2,8 @@
 
 Ultimate camera streaming application with support RTSP, WebRTC, HomeKit, FFmpeg, RTMP, etc.
 
+** * THIS FORK REMOVES HTML5 VIDEO CONTROLS FROM THE PLAYER * **
+
 ![](assets/go2rtc.png)
 
 - zero-dependency and zero-config [small app](#go2rtc-binary) for all OS (Windows, macOS, Linux, ARM)
