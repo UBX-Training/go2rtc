@@ -52,6 +52,8 @@
         /** @type {VideoStream} */
         const video = document.createElement("video-stream");
         video.background = background;
+        // Disable video controls on html5 player
+        video.controls = false;
         video.mode = modes[i] || video.mode;
         video.style.flex = width;
         video.src = new URL("api/ws?src=" + encodeURIComponent(streams[i]), location.href);
