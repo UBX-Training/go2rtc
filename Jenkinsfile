@@ -31,10 +31,7 @@ pipeline {
             parallel {
                 stage('go2rtc build') {
                     steps {
-                        script {
-                            go2rtc = docker.build("${CORE_IMAGE}:${TAG_ID}", "-f Dockerfile .")
-                            go2rtc.push()
-                        }
+                        sh 'docker buildx build --platform linux/arm64 -t "${CORE_IMAGE}:${TAG_ID}" -f Dockerfile .'
                     }
                 }
             }
@@ -47,11 +44,7 @@ pipeline {
                         branch 'master'
                     }
                     steps {
-                        script {
-                            // Only push images that were a successful build...
-                            // We're using 'watchtower' to auto-deploy the container once it's built and pushed into the docker registry...
-                            go2rtc.push("staging")
-                        }
+                        sh 'docker buildx build --push --platform linux/arm64 -t "${CORE_IMAGE}:staging" -f Dockerfile .'
                     }
                 }
                 stage('Production') {
@@ -59,11 +52,8 @@ pipeline {
                         branch 'production'
                     }
                     steps {
-                        script {
-                            go2rtc.push()
-                            go2rtc.push("production")
-                            go2rtc.push("latest")
-                        }
+                        sh 'docker buildx build --push --platform linux/arm64 -t "${CORE_IMAGE}:production" -f Dockerfile .'
+                        sh 'docker buildx build --push --platform linux/arm64 -t "${CORE_IMAGE}:latest" -f Dockerfile .'
                     }
                 }
             }
