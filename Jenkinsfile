@@ -31,7 +31,6 @@ pipeline {
             parallel {
                 stage('go2rtc build') {
                     steps {
-                        docker-registry.aws.gymsystems.co/backoffice/render-engine:staging
                         sh 'docker buildx build --platform linux/arm64,linux/amd64 -t "${CORE_IMAGE}:${TAG_ID}" -f Dockerfile .'
                     }
                 }
