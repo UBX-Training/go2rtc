@@ -10,7 +10,7 @@ FROM ngrok/ngrok:${NGROK_VERSION}-alpine AS ngrok
 
 
 # 1. Build go2rtc binary
-FROM --platform=linux/arm64 golang:${GO_VERSION}-alpine AS build
+FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine AS build
 ARG TARGETPLATFORM
 ARG TARGETOS
 ARG TARGETARCH

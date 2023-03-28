@@ -31,7 +31,8 @@ pipeline {
             parallel {
                 stage('go2rtc build') {
                     steps {
-                        sh 'docker buildx build --platform linux/arm64 -t "${CORE_IMAGE}:${TAG_ID}" -f Dockerfile .'
+                        docker-registry.aws.gymsystems.co/backoffice/render-engine:staging
+                        sh 'docker buildx build --platform linux/arm64,linux/amd64 -t "${CORE_IMAGE}:${TAG_ID}" -f Dockerfile .'
                     }
                 }
             }
@@ -44,7 +45,7 @@ pipeline {
                         branch 'master'
                     }
                     steps {
-                        sh 'docker buildx build --push --platform linux/arm64 -t "${CORE_IMAGE}:staging" -f Dockerfile .'
+                        sh 'docker buildx build --push --platform linux/arm64,linux/amd64 -t "${CORE_IMAGE}:staging" -f Dockerfile .'
                     }
                 }
                 stage('Production') {
@@ -52,8 +53,8 @@ pipeline {
                         branch 'production'
                     }
                     steps {
-                        sh 'docker buildx build --push --platform linux/arm64 -t "${CORE_IMAGE}:production" -f Dockerfile .'
-                        sh 'docker buildx build --push --platform linux/arm64 -t "${CORE_IMAGE}:latest" -f Dockerfile .'
+                        sh 'docker buildx build --push --platform linux/arm64,linux/amd64 -t "${CORE_IMAGE}:production" -f Dockerfile .'
+                        sh 'docker buildx build --push --platform linux/arm64,linux/amd64 -t "${CORE_IMAGE}:latest" -f Dockerfile .'
                     }
                 }
             }
