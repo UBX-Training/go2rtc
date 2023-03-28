@@ -3,8 +3,11 @@ pipeline {
 
     environment {
 
-        REPO                    = "docker-registry.aws.gymsystems.co"
-        CORE_IMAGE              = "${REPO}/cctv/go2rtc"
+        // Github Container Registry Login Details...
+        GHCR_USER               = credentials('gchr')
+
+        REPO                    = "ghcr.io"
+        CORE_IMAGE              = "${REPO}/UBX-Training/go2rtc"
 
         TAG_ID                  = sh(returnStdout: true, script: "git log -1 --oneline --pretty=%h").trim()
         GIT_COMMITTER_NAME      = sh(returnStdout: true, script: "git show -s --pretty=%an").trim()
@@ -14,7 +17,6 @@ pipeline {
         go2rtc                  = ""
 
     }
-
 
     stages {
 
@@ -44,6 +46,7 @@ pipeline {
                         branch 'master'
                     }
                     steps {
+                        sh 'echo $GHCR_USER_PSW | docker login ghcr.io -u $GHCR_USER_USR --password-stdin'
                         sh 'docker buildx build --push --platform linux/arm64,linux/amd64 -t "${CORE_IMAGE}:staging" -f Dockerfile .'
                     }
                 }
@@ -52,6 +55,7 @@ pipeline {
                         branch 'production'
                     }
                     steps {
+                        sh 'echo $GHCR_USER_PSW | docker login ghcr.io -u $GHCR_USER_USR --password-stdin'
                         sh 'docker buildx build --push --platform linux/arm64,linux/amd64 -t "${CORE_IMAGE}:production" -f Dockerfile .'
                         sh 'docker buildx build --push --platform linux/arm64,linux/amd64 -t "${CORE_IMAGE}:latest" -f Dockerfile .'
                     }
