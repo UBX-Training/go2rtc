@@ -7,7 +7,7 @@ pipeline {
         GHCR_USER               = credentials('gchr')
 
         REPO                    = "ghcr.io"
-        CORE_IMAGE              = "${REPO}/UBX-Training/go2rtc"
+        CORE_IMAGE              = "${REPO}/ubx-training/go2rtc"
 
         TAG_ID                  = sh(returnStdout: true, script: "git log -1 --oneline --pretty=%h").trim()
         GIT_COMMITTER_NAME      = sh(returnStdout: true, script: "git show -s --pretty=%an").trim()
