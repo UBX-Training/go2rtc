@@ -32,7 +32,7 @@ class VideoStream extends VideoRTC {
             right: 0;
             padding: 12px;
             color: white;
-            display: flex;
+            display: none;
             justify-content: space-between;
             pointer-events: none;
         }
