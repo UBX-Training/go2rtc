@@ -27,6 +27,8 @@
 <body>
 <script type="module" src="./video-stream.js"></script>
 <script type="module">
+    window.postMessage("STREAM_UI_LOADED", "*");
+
     const params = new URLSearchParams(location.search);
 
     // support multiple streams and multiple modes
