@@ -89,6 +89,8 @@ class VideoStream extends VideoRTC {
         console.debug("stream.onpcvideo");
         super.onpcvideo(ev);
 
+        window.postMessage("STARTING_VIDEO", "*");
+
         if (this.pcState !== WebSocket.CLOSED) {
             this.divMode = "RTC";
         }
