@@ -2,7 +2,7 @@ import {VideoRTC} from "./video-rtc.js";
 
 class VideoStream extends VideoRTC {
     set divMode(value) {
-        window.parent.postMessage("VIDEO_MODE", value);
+        window.parent.postMessage(JSON.stringify({"VIDEO_MODE": value}), "*");
         // this.querySelector(".mode").innerText = value;
         // this.querySelector(".status").innerText = "";
     }
@@ -10,7 +10,7 @@ class VideoStream extends VideoRTC {
     set divError(value) {        
         // const state = this.querySelector(".mode").innerText;
         if (state !== "loading") return;
-        window.parent.postMessage("VIDEO_ERROR", value);
+        window.parent.postMessage(JSON.stringify({"VIDEO_ERROR": value}), "*");
         // this.querySelector(".mode").innerText = "error";
         // this.querySelector(".status").innerText = value;
     }
