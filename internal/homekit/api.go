@@ -1,15 +1,15 @@
 package homekit
 
 import (
-	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+
 	"github.com/AlexxIT/go2rtc/internal/api"
 	"github.com/AlexxIT/go2rtc/internal/app/store"
 	"github.com/AlexxIT/go2rtc/internal/streams"
 	"github.com/AlexxIT/go2rtc/pkg/hap"
-	"github.com/AlexxIT/go2rtc/pkg/hap/mdns"
-	"net/http"
-	"net/url"
-	"strings"
+	"github.com/AlexxIT/go2rtc/pkg/mdns"
 )
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {
@@ -32,26 +32,25 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		for info := range mdns.GetAll() {
-			if !strings.HasSuffix(info.Name, mdns.Suffix) {
-				continue
-			}
-			name := info.Name[:len(info.Name)-len(mdns.Suffix)]
-			device := Device{
-				Name: strings.ReplaceAll(name, "\\", ""),
-				Addr: fmt.Sprintf("%s:%d", info.AddrV4, info.Port),
-			}
-			for _, field := range info.InfoFields {
-				switch field[:2] {
-				case "id":
-					device.ID = field[3:]
-				case "md":
-					device.Model = field[3:]
-				case "sf":
-					device.Paired = field[3] == '0'
+		err := mdns.Discovery(mdns.ServiceHAP, func(entry *mdns.ServiceEntry) bool {
+			log.Trace().Msgf("[homekit] mdns=%s", entry)
+
+			if entry.Complete() {
+				device := Device{
+					Name:   entry.Name,
+					Addr:   entry.Addr(),
+					ID:     entry.Info[hap.TXTDeviceID],
+					Model:  entry.Info[hap.TXTModel],
+					Paired: entry.Info[hap.TXTStatusFlags] == "0",
 				}
+				items = append(items, device)
 			}
-			items = append(items, device)
+			return false
+		})
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		api.ResponseJSON(w, items)
@@ -77,7 +76,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func hkPair(deviceID, pin, name string) (err error) {
-	var conn *hap.Conn
+	var conn *hap.Client
 
 	if conn, err = hap.Pair(deviceID, pin); err != nil {
 		return
@@ -98,21 +97,15 @@ func hkDelete(name string) (err error) {
 			continue
 		}
 
-		var conn *hap.Conn
+		var conn *hap.Client
 
-		if conn, err = hap.NewConn(rawURL.(string)); err != nil {
+		if conn, err = hap.NewClient(rawURL.(string)); err != nil {
 			return
 		}
 
 		if err = conn.Dial(); err != nil {
 			return
 		}
-
-		go func() {
-			if err = conn.Handle(); err != nil {
-				log.Warn().Err(err).Caller().Send()
-			}
-		}()
 
 		if err = conn.ListPairings(); err != nil {
 			return

@@ -1,15 +1,18 @@
 package api
 
 import (
+	"crypto/tls"
 	"encoding/json"
-	"github.com/AlexxIT/go2rtc/internal/app"
-	"github.com/rs/zerolog"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/AlexxIT/go2rtc/internal/app"
+	"github.com/rs/zerolog"
 )
 
 func Init() {
@@ -21,11 +24,14 @@ func Init() {
 			BasePath  string `yaml:"base_path"`
 			StaticDir string `yaml:"static_dir"`
 			Origin    string `yaml:"origin"`
+			TLSListen string `yaml:"tls_listen"`
+			TLSCert   string `yaml:"tls_cert"`
+			TLSKey    string `yaml:"tls_key"`
 		} `yaml:"api"`
 	}
 
 	// default config
-	cfg.Mod.Listen = ":1984"
+	cfg.Mod.Listen = "0.0.0.0:1984"
 
 	// load config from YAML
 	app.LoadConfig(&cfg)
@@ -73,7 +79,42 @@ func Init() {
 			log.Fatal().Err(err).Msg("[api] serve")
 		}
 	}()
+
+	// Initialize the HTTPS server
+	if cfg.Mod.TLSListen != "" && cfg.Mod.TLSCert != "" && cfg.Mod.TLSKey != "" {
+		cert, err := tls.X509KeyPair([]byte(cfg.Mod.TLSCert), []byte(cfg.Mod.TLSKey))
+		if err != nil {
+			log.Error().Err(err).Caller().Send()
+			return
+		}
+
+		tlsListener, err := net.Listen("tcp", cfg.Mod.TLSListen)
+		if err != nil {
+			log.Fatal().Err(err).Caller().Send()
+			return
+		}
+
+		log.Info().Str("addr", cfg.Mod.TLSListen).Msg("[api] tls listen")
+
+		tlsServer := &http.Server{
+			Handler: Handler,
+			TLSConfig: &tls.Config{
+				Certificates: []tls.Certificate{cert},
+			},
+		}
+
+		go func() {
+			if err := tlsServer.ServeTLS(tlsListener, "", ""); err != nil {
+				log.Fatal().Err(err).Msg("[api] tls serve")
+			}
+		}()
+	}
 }
+
+const (
+	MimeJSON = "application/json"
+	MimeText = "text/plain"
+)
 
 var Handler http.Handler
 
@@ -91,25 +132,28 @@ func HandleFunc(pattern string, handler http.HandlerFunc) {
 // ResponseJSON important always add Content-Type
 // so go won't need to call http.DetectContentType
 func ResponseJSON(w http.ResponseWriter, v any) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", MimeJSON)
 	_ = json.NewEncoder(w).Encode(v)
 }
 
 func ResponsePrettyJSON(w http.ResponseWriter, v any) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", MimeJSON)
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	_ = enc.Encode(v)
 }
 
-func ResponseRawJSON(w http.ResponseWriter, s string) {
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write([]byte(s))
-}
+func Response(w http.ResponseWriter, body any, contentType string) {
+	w.Header().Set("Content-Type", contentType)
 
-func ResponseText(w http.ResponseWriter, b []byte) {
-	w.Header().Set("Content-Type", "text/plain")
-	_, _ = w.Write(b)
+	switch v := body.(type) {
+	case []byte:
+		_, _ = w.Write(v)
+	case string:
+		_, _ = w.Write([]byte(v))
+	default:
+		_, _ = fmt.Fprint(w, body)
+	}
 }
 
 const StreamNotFound = "stream not found"

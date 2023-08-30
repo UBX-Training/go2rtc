@@ -1,12 +1,18 @@
 package core
 
 import (
-	cryptorand "crypto/rand"
-	"github.com/rs/zerolog/log"
+	"crypto/rand"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
+)
+
+const (
+	BufferSize      = 64 * 1024 // 64K
+	ConnDialTimeout = time.Second * 3
+	ConnDeadline    = time.Second * 3
+	ProbeTimeout    = time.Second * 3
 )
 
 // Now90000 - timestamp for Video (clock rate = 90000 samples per second)
@@ -19,7 +25,7 @@ const symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-
 // RandString base10 - numbers, base16 - hex, base36 - digits+letters, base64 - URL safe symbols
 func RandString(size, base byte) string {
 	b := make([]byte, size)
-	if _, err := cryptorand.Read(b); err != nil {
+	if _, err := rand.Read(b); err != nil {
 		panic(err)
 	}
 	for i := byte(0); i < size; i++ {
@@ -57,7 +63,9 @@ func Between(s, sub1, sub2 string) string {
 }
 
 func Atoi(s string) (i int) {
-	i, _ = strconv.Atoi(s)
+	if s != "" {
+		i, _ = strconv.Atoi(s)
+	}
 	return
 }
 
@@ -69,7 +77,6 @@ func Assert(ok bool) {
 }
 
 func Caller() string {
-	log.Error().Caller(0).Send()
 	_, file, line, _ := runtime.Caller(1)
 	return file + ":" + strconv.Itoa(line)
 }
