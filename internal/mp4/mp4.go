@@ -29,6 +29,10 @@ func Init() {
 var log zerolog.Logger
 
 func handlerKeyframe(w http.ResponseWriter, r *http.Request) {
+
+    // Add the Cross-Origin-Resource-Policy header
+    w.Header().Set("Cross-Origin-Resource-Policy", "cross-origin")
+
 	// Chrome 105 does two requests: without Range and with `Range: bytes=0-`
 	ua := r.UserAgent()
 	if strings.Contains(ua, " Chrome/") {
@@ -75,6 +79,10 @@ func handlerKeyframe(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlerMP4(w http.ResponseWriter, r *http.Request) {
+
+    // Add the Cross-Origin-Resource-Policy header
+    w.Header().Set("Cross-Origin-Resource-Policy", "cross-origin")
+
 	log.Trace().Msgf("[mp4] %s %+v", r.Method, r.Header)
 
 	query := r.URL.Query()
