@@ -63,6 +63,9 @@ func publicIPHandler(w http.ResponseWriter, r *http.Request) {
     ResponseJSON(w, response)
 }
 
+func publicIPHandlerWrapper() http.Handler {
+    return middlewareCORS(http.HandlerFunc(publicIPHandler))
+}
 
 func Init() {
 	var cfg struct {
@@ -97,7 +100,7 @@ func Init() {
 	HandleFunc("api", apiHandler)
 	HandleFunc("api/config", configHandler)
 	HandleFunc("api/exit", exitHandler)
-	HandleFunc("api/publicip", middlewareCORS(publicIPHandler))
+	http.Handle("api/publicip", publicIPHandlerWrapper())
 
 	// ensure we can listen without errors
 	var err error
