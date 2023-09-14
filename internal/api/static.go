@@ -12,6 +12,7 @@ func withCORS(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")  // allows any domain, for security you might specify allowed domains
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		w.Header().Set("Cross-Origin-Resource-Policy", "cross-origin")
 		
 		// If it's a preflight OPTIONS request, respond no content
 		if r.Method == "OPTIONS" {
