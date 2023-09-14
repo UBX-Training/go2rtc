@@ -42,11 +42,4 @@ nav li {
     display: inline;
 }
 </style>
-<nav>
-    <ul>
-        <li><a href="index.html">Streams</a></li>
-        <li><a href="add.html">Add</a></li>
-        <li><a href="editor.html">Config</a></li>
-    </ul>
-</nav>
 ` + document.body.innerHTML;

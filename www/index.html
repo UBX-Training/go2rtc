@@ -54,6 +54,10 @@
         .controls > label {
             margin-left: 10px;
         }
+        .info {
+            font-weight: bold;
+            font-size: 32px;
+        }
     </style>
 </head>
 <body>
@@ -77,11 +81,15 @@
     <tbody id="streams">
     </tbody>
 </table>
+<hr>
+<p>
+    To configure camera settings and setup this device. Please configure via the <a href="http://portal.hub.gymsystems.co" target="_blank">Performance Hub</a> SaaS. <br>
+    Use the 'Stream' button to view the live stream of the camera for setup/configuration purposes. 
+</p>
 <script>
     const templates = [
         '<a href="stream.html?src={name}">stream</a>',
-        '<a href="links.html?src={name}">links</a>',
-        '<a href="#" data-name="{name}">delete</a>',
+        '<a href="links.html?src={name}">links</a>'
     ];
 
     document.querySelector('.controls > button')
@@ -145,7 +153,7 @@
     const url = new URL('api', location.href);
     fetch(url, {cache: 'no-cache'}).then(r => r.json()).then(data => {
         const info = document.querySelector('.info');
-        info.innerText = `Version: ${data.version}, Config: ${data.config_path}`;
+        info.innerText = `UBX AI Camera - Go2rtc Version: ${data.version}`;
     });
 
     reload();

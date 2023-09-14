@@ -5,29 +5,6 @@ import (
 	"net/http"
 )
 
-// CORS middleware
-func withCORS(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Set your desired headers here
-		w.Header().Set("Access-Control-Allow-Origin", "*")  // allows any domain, for security you might specify allowed domains
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-
-		w.Header().Set("Cross-Origin-Resource-Policy", "cross-origin")
-		w.Header().Set("Cross-Origin-Embedder-Policy", "require-corp")
-		
-		// If it's a preflight OPTIONS request, respond no content
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		
-		// Continue the chain of handlers
-		next.ServeHTTP(w, r)
-	})
-}
-
-
 func initStatic(staticDir string) {
 	var root http.FileSystem
 	if staticDir != "" {
@@ -40,13 +17,10 @@ func initStatic(staticDir string) {
 	base := len(basePath)
 	fileServer := http.FileServer(root)
 
-	// Using the CORS middleware with your static file server
-	corsFileServer := withCORS(fileServer)
-
 	HandleFunc("", func(w http.ResponseWriter, r *http.Request) {
 		if base > 0 {
 			r.URL.Path = r.URL.Path[base:]
 		}
-		corsFileServer.ServeHTTP(w, r)  // Use the cors wrapped handler here
+		fileServer.ServeHTTP(w, r)
 	})
 }
