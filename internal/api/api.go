@@ -97,7 +97,7 @@ func Init() {
 	HandleFunc("api", apiHandler)
 	HandleFunc("api/config", configHandler)
 	HandleFunc("api/exit", exitHandler)
-	HandleFunc("api/publicip", publicIPHandler)
+	HandleFunc("api/publicip", middlewareCORS(publicIPHandler))
 
 	// ensure we can listen without errors
 	var err error
