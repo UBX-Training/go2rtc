@@ -15,6 +15,53 @@ import (
 	"github.com/rs/zerolog"
 )
 
+func getPublicIP() (string, error) {
+    // Setting up a custom HTTP client with a timeout
+    client := &http.Client{
+        Timeout: 5 * time.Second,
+    }
+
+    resp, err := client.Get("https://api.ipify.org")
+    if err != nil {
+        return "", fmt.Errorf("Failed to fetch public IP: %v", err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        return "", fmt.Errorf("Unexpected status code: %d", resp.StatusCode)
+    }
+
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return "", fmt.Errorf("Failed to read response body: %v", err)
+    }
+
+    ip := strings.TrimSpace(string(body))
+    if net.ParseIP(ip) == nil {
+        return "", fmt.Errorf("Invalid IP address received: %s", ip)
+    }
+
+    return ip, nil
+}
+
+func publicIPHandler(w http.ResponseWriter, r *http.Request) {
+    ip, err := getPublicIP()
+    if err != nil {
+        log.Error().Err(err).Msg("Error retrieving public IP") // Log the error for debugging
+        http.Error(w, "Failed to retrieve public IP", http.StatusInternalServerError)
+        return
+    }
+
+    response := struct {
+        PublicIP string `json:"public_ip"`
+    }{
+        PublicIP: ip,
+    }
+
+    ResponseJSON(w, response)
+}
+
+
 func Init() {
 	var cfg struct {
 		Mod struct {
@@ -48,6 +95,7 @@ func Init() {
 	HandleFunc("api", apiHandler)
 	HandleFunc("api/config", configHandler)
 	HandleFunc("api/exit", exitHandler)
+	HandleFunc("api/publicip", publicIPHandler)
 
 	// ensure we can listen without errors
 	var err error
