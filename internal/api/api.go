@@ -55,7 +55,7 @@ func publicIPHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     response := struct {
-        PublicIP string `json:"public_ip"`
+        PublicIP string `json:"publicip"`
     }{
         PublicIP: ip,
     }
