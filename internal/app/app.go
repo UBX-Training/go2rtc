@@ -4,20 +4,17 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/AlexxIT/go2rtc/pkg/shell"
 	"github.com/AlexxIT/go2rtc/pkg/yaml"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-var Version = "1.7.1"
+var Version = "1.8.5"
 var UserAgent = "go2rtc/" + Version
 
 var ConfigPath string
@@ -86,44 +83,12 @@ func Init() {
 	migrateStore()
 }
 
-func NewLogger(format string, level string) zerolog.Logger {
-	var writer io.Writer = os.Stdout
-
-	if format != "json" {
-		writer = zerolog.ConsoleWriter{
-			Out: writer, TimeFormat: "15:04:05.000",
-			NoColor: writer != os.Stdout || format == "text",
-		}
-	}
-
-	zerolog.TimeFieldFormat = time.RFC3339Nano
-
-	lvl, err := zerolog.ParseLevel(level)
-	if err != nil || lvl == zerolog.NoLevel {
-		lvl = zerolog.InfoLevel
-	}
-
-	return zerolog.New(writer).With().Timestamp().Logger().Level(lvl)
-}
-
 func LoadConfig(v any) {
 	for _, data := range configs {
 		if err := yaml.Unmarshal(data, v); err != nil {
 			log.Warn().Err(err).Msg("[app] read config")
 		}
 	}
-}
-
-func GetLogger(module string) zerolog.Logger {
-	if s, ok := modules[module]; ok {
-		lvl, err := zerolog.ParseLevel(s)
-		if err == nil {
-			return log.Level(lvl)
-		}
-		log.Warn().Err(err).Caller().Send()
-	}
-
-	return log.Logger
 }
 
 func PatchConfig(key string, value any, path ...string) error {
@@ -156,6 +121,3 @@ func (c *Config) Set(value string) error {
 }
 
 var configs [][]byte
-
-// modules log levels
-var modules map[string]string

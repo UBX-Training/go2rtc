@@ -18,6 +18,7 @@ const (
 	EngineCUDA         = "cuda"         // NVidia on Windows and Linux
 	EngineDXVA2        = "dxva2"        // Intel on Windows
 	EngineVideoToolbox = "videotoolbox" // macOS
+	EngineRKMPP        = "rkmpp"        // Rockchip
 )
 
 func Init(bin string) {
@@ -60,6 +61,10 @@ func MakeHardware(args *ffmpeg.Args, engine string, defaults map[string]string) 
 
 			if !args.HasFilters("drawtext=") {
 				args.Input = "-hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_flags allow_profile_mismatch " + args.Input
+
+				if name == "h264" {
+					fixPixelFormat(args)
+				}
 
 				for i, filter := range args.Filters {
 					if strings.HasPrefix(filter, "scale=") {
@@ -121,6 +126,24 @@ func MakeHardware(args *ffmpeg.Args, engine string, defaults map[string]string) 
 
 		case EngineV4L2M2M:
 			args.Codecs[i] = defaults[name+"/"+engine]
+
+		case EngineRKMPP:
+			args.Codecs[i] = defaults[name+"/"+engine]
+
+			for j, filter := range args.Filters {
+				if strings.HasPrefix(filter, "scale=") {
+					args.Filters = append(args.Filters[:j], args.Filters[j+1:]...)
+
+					width, height, _ := strings.Cut(filter[6:], ":")
+					if width != "-1" {
+						args.Codecs[i] += " -width " + width
+					}
+					if height != "-1" {
+						args.Codecs[i] += " -height " + height
+					}
+					break
+				}
+			}
 		}
 	}
 }
@@ -153,4 +176,25 @@ func cut(s string, sep byte, pos int) string {
 		return s[:i]
 	}
 	return s
+}
+
+// fixPixelFormat:
+//   - good h264 pixel: yuv420p(tv, bt709) == yuv420p (mpeg/limited/tv)
+//   - bad h264 pixel: yuvj420p(pc, bt709) == yuvj420p (jpeg/full/pc)
+//   - bad jpeg pixel: yuvj422p(pc, bt470bg)
+func fixPixelFormat(args *ffmpeg.Args) {
+	// in my tests this filters has same CPU/GPU load:
+	//   - "hwupload"
+	//   - "hwupload,scale_vaapi=out_color_matrix=bt709:out_range=tv"
+	//   - "hwupload,scale_vaapi=out_color_matrix=bt709:out_range=tv:format=nv12"
+	const fixPixFmt = "out_color_matrix=bt709:out_range=tv:format=nv12"
+
+	for i, filter := range args.Filters {
+		if strings.HasPrefix(filter, "scale=") {
+			args.Filters[i] = filter + ":" + fixPixFmt
+			return
+		}
+	}
+
+	args.Filters = append(args.Filters, "scale="+fixPixFmt)
 }

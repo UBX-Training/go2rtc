@@ -2,7 +2,9 @@ package shell
 
 import (
 	"os"
+	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"syscall"
@@ -12,35 +14,28 @@ func QuoteSplit(s string) []string {
 	var a []string
 
 	for len(s) > 0 {
-		is := strings.IndexByte(s, ' ')
-		if is >= 0 {
-			// skip prefix and double spaces
-			if is == 0 {
-				// goto next symbol
-				s = s[1:]
-				continue
+		switch c := s[0]; c {
+		case '\t', '\n', '\r', ' ': // unicode.IsSpace
+			s = s[1:]
+		case '"', '\'': // quote chars
+			if i := strings.IndexByte(s[1:], c); i > 0 {
+				a = append(a, s[1:i+1])
+				s = s[i+2:]
+			} else {
+				return nil // error
 			}
-
-			// check if quote in word
-			if i := strings.IndexByte(s[:is], '"'); i >= 0 {
-				// search quote end
-				if is = strings.Index(s, `" `); is > 0 {
-					is += 1
-				} else {
-					is = -1
-				}
+		default:
+			i := strings.IndexAny(s, "\t\n\r ")
+			if i > 0 {
+				a = append(a, s[:i])
+				s = s[i:]
+			} else {
+				a = append(a, s)
+				s = ""
 			}
-		}
-
-		if is >= 0 {
-			a = append(a, strings.ReplaceAll(s[:is], `"`, ""))
-			s = s[is+1:]
-		} else {
-			//add last word
-			a = append(a, s)
-			break
 		}
 	}
+
 	return a
 }
 
@@ -74,4 +69,21 @@ func RunUntilSignal() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	println("exit with signal:", (<-sigs).String())
+}
+
+// Restart idea taken from https://github.com/tillberg/autorestart
+// Copyright (c) 2015, Dan Tillberg
+func Restart() {
+	path, err := exec.LookPath(os.Args[0])
+	if err != nil {
+		return
+	}
+	path, err = filepath.Abs(path)
+	if err != nil {
+		return
+	}
+	path = filepath.Clean(path)
+	if err = syscall.Exec(path, os.Args, os.Environ()); err != nil {
+		panic(err)
+	}
 }

@@ -35,7 +35,7 @@ func (c *Conn) Dial() (err error) {
 		if c.Timeout != 0 {
 			timeout = time.Second * time.Duration(c.Timeout)
 		}
-		conn, err = tcp.Dial(c.URL, "554", timeout)
+		conn, err = tcp.Dial(c.URL, timeout)
 	} else {
 		conn, err = websocket.Dial(c.Transport)
 	}
@@ -219,6 +219,9 @@ func (c *Conn) SetupMedia(media *core.Media) (byte, error) {
 			rawURL += "/"
 		}
 		rawURL += media.ID
+	} else if strings.HasPrefix(rawURL, "rtsp://rtsp://") {
+		// fix https://github.com/AlexxIT/go2rtc/issues/830
+		rawURL = rawURL[7:]
 	}
 	trackURL, err := urlParse(rawURL)
 	if err != nil {

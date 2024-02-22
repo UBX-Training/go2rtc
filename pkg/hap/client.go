@@ -83,6 +83,10 @@ func (c *Client) DeviceHost() string {
 }
 
 func (c *Client) Dial() (err error) {
+	if len(c.ClientID) == 0 || len(c.ClientPrivate) == 0 {
+		return errors.New("hap: can't dial witout client_id or client_private")
+	}
+
 	// update device address (host and/or port) before dial
 	_ = mdns.QueryOrDiscovery(c.DeviceHost(), mdns.ServiceHAP, func(entry *mdns.ServiceEntry) bool {
 		if entry.Complete() && entry.Info["id"] == c.DeviceID {
@@ -217,9 +221,7 @@ func (c *Client) Dial() (err error) {
 		return
 	}
 	// new reader for new conn
-	c.reader = bufio.NewReaderSize(c.Conn, 32*1024) // 32K like default request body
-
-	go c.eventsReader()
+	c.reader = bufio.NewReader(c.Conn)
 
 	return
 }
@@ -228,9 +230,7 @@ func (c *Client) Close() error {
 	if c.Conn == nil {
 		return nil
 	}
-	conn := c.Conn
-	c.Conn = nil
-	return conn.Close()
+	return c.Conn.Close()
 }
 
 func (c *Client) eventsReader() {

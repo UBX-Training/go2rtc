@@ -49,6 +49,9 @@ func syncHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "", http.StatusBadRequest)
 		}
 
+	case "OPTIONS":
+		w.WriteHeader(http.StatusNoContent)
+
 	default:
 		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
@@ -195,9 +198,7 @@ func inputWebRTC(w http.ResponseWriter, r *http.Request) {
 		case pion.PeerConnectionState:
 			if msg == pion.PeerConnectionStateClosed {
 				stream.RemoveProducer(prod)
-				if _, ok := sessions[id]; ok {
-					delete(sessions, id)
-				}
+				delete(sessions, id)
 			}
 		}
 	})
