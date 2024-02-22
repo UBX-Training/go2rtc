@@ -10,13 +10,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-<<<<<<< HEAD
     "time"
     "io"
-=======
 	"syscall"
->>>>>>> upstream/master
-
 	"github.com/AlexxIT/go2rtc/internal/app"
 	"github.com/AlexxIT/go2rtc/pkg/shell"
 	"github.com/rs/zerolog"
@@ -106,22 +102,10 @@ func Init() {
 	HandleFunc("api", apiHandler)
 	HandleFunc("api/config", configHandler)
 	HandleFunc("api/exit", exitHandler)
-<<<<<<< HEAD
-	http.Handle("api/publicip", publicIPHandlerWrapper())
-
-	// ensure we can listen without errors
-	var err error
-	ln, err = net.Listen("tcp", cfg.Mod.Listen)
-	if err != nil {
-		log.Fatal().Err(err).Msg("[api] listen")
-		return
-	}
-
-	log.Info().Str("addr", cfg.Mod.Listen).Msg("[api] listen")
-=======
 	HandleFunc("api/restart", restartHandler)
 	HandleFunc("api/log", logHandler)
->>>>>>> upstream/master
+
+	http.Handle("api/publicip", publicIPHandlerWrapper())
 
 	Handler = http.DefaultServeMux // 4th
 
