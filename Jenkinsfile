@@ -20,11 +20,28 @@ pipeline {
 
     stages {
 
+
         stage("Set Variables & Configuration") {
             steps {
                 script {
                     def alljob = JOB_NAME.tokenize('/') as String[]
                     JENKINS_PROJECT = alljob[0]
+                }
+            }
+        }
+
+        stage("Prepare Build Environment to support arm") {
+            steps {
+                script {
+                    // Set the Docker Buildx builder here - this may change from time to time so check on the server 
+                        // [root@ip-172-31-35-170 docker]$ docker buildx ls
+                        // NAME/NODE           DRIVER/ENDPOINT             STATUS  BUILDKIT PLATFORMS
+                        // priceless_fermat *  docker-container
+                        //   priceless_fermat0 unix:///var/run/docker.sock running v0.12.5  linux/amd64*, linux/arm64*, linux/arm/v7*, linux/amd64/v2, linux/amd64/v3, linux/amd64/v4, linux/386
+                        // default             docker
+                        //   default           default                     running 20.10.4  linux/amd64, linux/arm64, linux/386
+
+                    sh "docker buildx use priceless_fermat"
                 }
             }
         }
