@@ -33,7 +33,7 @@ pipeline {
             parallel {
                 stage('go2rtc build') {
                     steps {
-                        sh 'docker buildx build --platform linux/arm64,linux/amd64,linux/arm/v7 -t "${CORE_IMAGE}:${TAG_ID}" -f Dockerfile .'
+                        sh 'docker buildx build --platform linux/arm64,linux/amd64 -t "${CORE_IMAGE}:${TAG_ID}" -f Dockerfile .'
                     }
                 }
             }
@@ -47,7 +47,7 @@ pipeline {
                     }
                     steps {
                         sh 'echo $GHCR_USER_PSW | docker login ghcr.io -u $GHCR_USER_USR --password-stdin'
-                        sh 'docker buildx build --push --platform linux/arm64,linux/amd64,linux/arm/v7 -t "${CORE_IMAGE}:staging" -f Dockerfile .'
+                        sh 'docker buildx build --push --platform linux/arm64,linux/amd64 -t "${CORE_IMAGE}:staging" -f Dockerfile .'
                     }
                 }
                 stage('Production') {
@@ -56,8 +56,8 @@ pipeline {
                     }
                     steps {
                         sh 'echo $GHCR_USER_PSW | docker login ghcr.io -u $GHCR_USER_USR --password-stdin'
-                        sh 'docker buildx build --push --platform linux/arm64,linux/amd64,linux/arm/v7 -t "${CORE_IMAGE}:production" -f Dockerfile .'
-                        sh 'docker buildx build --push --platform linux/arm64,linux/amd64,linux/arm/v7 -t "${CORE_IMAGE}:latest" -f Dockerfile .'
+                        sh 'docker buildx build --push --platform linux/arm64,linux/amd64 -t "${CORE_IMAGE}:production" -f Dockerfile .'
+                        sh 'docker buildx build --push --platform linux/arm64,linux/amd64 -t "${CORE_IMAGE}:latest" -f Dockerfile .'
                     }
                 }
             }
