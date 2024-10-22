@@ -25,37 +25,39 @@ pipeline {
             }
         }
 
-        stage("Prepare Build Environment to Support ARM using docker buildx") {
+        stage("Prepare Build Environment to Support ARM") {
             steps {
                 script {
-                    // Check if a suitable builder exists
+                    // Detect the builder that supports ARM (linux/arm/v7)
                     def builderName = sh(
                         script: "docker buildx ls | grep 'linux/arm/v7' | head -n 1 | awk '{print \$1}'",
                         returnStdout: true
                     ).trim()
 
                     if (builderName) {
-                        // Check if the builder is inactive
+                        // Check if the builder is active
                         def builderStatus = sh(
                             script: "docker buildx ls | grep ${builderName} | awk '{print \$4}'",
                             returnStdout: true
                         ).trim()
 
-                        if (builderStatus == "inactive") {
-                            echo "Builder ${builderName} is inactive. Starting it..."
+                        if (builderStatus != "running") {
+                            echo "Builder ${builderName} is inactive. Bootstrapping it..."
                             sh "docker buildx inspect ${builderName} --bootstrap"
+                        } else {
+                            echo "Builder ${builderName} is already running."
                         }
                     } else {
-                        // Create a new builder if none found
-                        builderName = "arm_builder"
-                        echo "No suitable builder found. Creating new builder ${builderName}..."
+                        // No suitable builder found, create a new one
+                        builderName = "arm_builder_${UUID.randomUUID().toString().substring(0, 8)}"
+                        echo "Creating new builder: ${builderName}"
                         sh """
                             docker buildx create --name ${builderName} --use
                             docker buildx inspect ${builderName} --bootstrap
                         """
                     }
 
-                    // Use the builder
+                    // Use the detected or newly created builder
                     sh "docker buildx use ${builderName}"
                 }
             }
