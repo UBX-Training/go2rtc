@@ -34,7 +34,15 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    if (builderName) {
+                    if (!builderName) {
+                        // No suitable builder found, create a new one
+                        builderName = "arm_builder_${UUID.randomUUID().toString().substring(0, 8)}"
+                        echo "Creating new builder: ${builderName}"
+                        sh """
+                            docker buildx create --name ${builderName} --use
+                            docker buildx inspect ${builderName} --bootstrap
+                        """
+                    } else {
                         // Check if the builder is active
                         def builderStatus = sh(
                             script: "docker buildx ls | grep ${builderName} | awk '{print \$4}'",
@@ -47,14 +55,6 @@ pipeline {
                         } else {
                             echo "Builder ${builderName} is already running."
                         }
-                    } else {
-                        // No suitable builder found, create a new one
-                        builderName = "arm_builder_${UUID.randomUUID().toString().substring(0, 8)}"
-                        echo "Creating new builder: ${builderName}"
-                        sh """
-                            docker buildx create --name ${builderName} --use
-                            docker buildx inspect ${builderName} --bootstrap
-                        """
                     }
 
                     // Use the detected or newly created builder
