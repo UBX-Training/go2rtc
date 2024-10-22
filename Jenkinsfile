@@ -71,7 +71,7 @@ pipeline {
             parallel {
                 stage('go2rtc build') {
                     steps {
-                        sh 'docker buildx build --platform linux/arm64,linux/amd64,linux/arm/v7 -t "${CORE_IMAGE}:${TAG_ID}" -f Dockerfile .'
+                        sh 'docker buildx build --no-cache --platform linux/arm64,linux/amd64,linux/arm/v7 -t "${CORE_IMAGE}:${TAG_ID}" -f Dockerfile .'
                     }
                 }
             }
