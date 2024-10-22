@@ -134,16 +134,15 @@ body.dark-mode hr {
 </style>
 <nav>
     <ul>
-        <li><a href="log.html">Logs</a></li>
-        <li><a href="network.html">Network</a></li>
+        <li><a href="/">Home</a></li>
+        <li><a href="/log.html">Logs</a></li>
+        <li><a href="/network.html">Network Flow</a></li>
        <li><a href="#" id="darkModeToggle">
        &#127769;
         </a>
         </li>
     </ul>
 </nav>
-
-v1.9.4
 ` + document.body.innerHTML;
 
 const sunIcon = '&#9728;&#65039;';
