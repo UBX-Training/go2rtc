@@ -28,9 +28,11 @@ pipeline {
         stage("Prepare Build Environment to Support ARM") {
             steps {
                 script {
-                    // Detect the builder that supports ARM (linux/arm/v7)
+                    // Detect the parent builder name that supports ARM (linux/arm/v7)
                     def builderName = sh(
-                        script: "docker buildx ls | grep 'linux/arm/v7' | head -n 1 | awk '{print \$1}'",
+                        script: """
+                            docker buildx ls | awk '/linux\\/arm\\/v7/ {print prev} {prev=\$1}' | head -n 1
+                        """,
                         returnStdout: true
                     ).trim()
 
@@ -43,9 +45,11 @@ pipeline {
                             docker buildx inspect ${builderName} --bootstrap
                         """
                     } else {
+                        echo "Using builder: ${builderName}"
+
                         // Check if the builder is active
                         def builderStatus = sh(
-                            script: "docker buildx ls | grep ${builderName} | awk '{print \$4}'",
+                            script: "docker buildx ls | grep ${builderName} | awk 'NR==1{print \$4}'",
                             returnStdout: true
                         ).trim()
 
