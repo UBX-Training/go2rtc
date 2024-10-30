@@ -41,6 +41,9 @@
     const modes = params.getAll('mode');
     if (modes.length === 0) modes.push('');
 
+    // Expose streams globally
+    window.go2rtc_streams = streams;
+
     // Adjust streams/modes lengths to match
     while (modes.length > streams.length) {
         streams.push(streams[0]);
@@ -77,5 +80,6 @@
         document.body.appendChild(video);
     }
 </script>
+
 </body>
 </html>

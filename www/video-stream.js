@@ -61,7 +61,7 @@ class VideoStream extends VideoRTC {
         const result = super.onopen();
 
         this.onmessage['stream'] = msg => {
-            console.debug('stream.onmessge', msg);
+            console.debug('stream.onmessage', msg);
             switch (msg.type) {
                 case 'error':
                     this.divError = msg.value;
@@ -87,9 +87,9 @@ class VideoStream extends VideoRTC {
         console.debug('stream.onpcvideo');
         super.onpcvideo(ev);
 
-        // Include the `src` value in the STARTING_VIDEO message
-        const videoSrc = this.video?.src || 'unknown';
-        const message = `STARTING_VIDEO:${videoSrc}`;
+        // Include the list of streams in the STARTING_VIDEO message
+        const videoSrcs = window.go2rtc_streams?.join(',') || 'unknown';
+        const message = `STARTING_VIDEO:${videoSrcs}`;
         window.parent.postMessage(message, "*");
 
         if (this.pcState !== WebSocket.CLOSED) {
