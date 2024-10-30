@@ -1,17 +1,13 @@
-import {VideoRTC} from './video-rtc.js';
+import { VideoRTC } from './video-rtc.js';
 
-/**
- * This is example, how you can extend VideoRTC player for your app.
- * Also you can check this example: https://github.com/AlexxIT/WebRTC
- */
 class VideoStream extends VideoRTC {
     set divMode(value) {
-        window.parent.postMessage(JSON.stringify({"VIDEO_MODE": value}), "*");
+        window.parent.postMessage(JSON.stringify({ "VIDEO_MODE": value }), "*");
     }
 
-    set divError(value) {        
+    set divError(value) {
         if (state !== "loading") return;
-        window.parent.postMessage(JSON.stringify({"VIDEO_ERROR": value}), "*");
+        window.parent.postMessage(JSON.stringify({ "VIDEO_ERROR": value }), "*");
     }
 
     /**
@@ -91,7 +87,10 @@ class VideoStream extends VideoRTC {
         console.debug('stream.onpcvideo');
         super.onpcvideo(ev);
 
-        window.parent.postMessage("STARTING_VIDEO", "*");
+        // Include the `src` value in the STARTING_VIDEO message
+        const videoSrc = this.video?.src || 'unknown';
+        const message = `STARTING_VIDEO:${videoSrc}`;
+        window.parent.postMessage(message, "*");
 
         if (this.pcState !== WebSocket.CLOSED) {
             this.divMode = 'RTC';

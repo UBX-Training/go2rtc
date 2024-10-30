@@ -22,20 +22,26 @@
             align-content: flex-start;
             align-items: flex-start;
         }
+
+        video-stream {
+            pointer-events: none; /* Disable all interactions */
+            object-fit: cover; /* Ensure video fills its container */
+            width: 100%; /* Take full width */
+            height: 100%; /* Take full height */
+        }
     </style>
 </head>
 <body>
 <script type="module" src="./video-stream.js"></script>
 <script type="module">
-    window.parent.postMessage("STREAM_UI_LOADED", "*");
-
     const params = new URLSearchParams(location.search);
 
-    // support multiple streams and multiple modes
+    // Extract 'src' parameters from the query string
     const streams = params.getAll('src');
     const modes = params.getAll('mode');
     if (modes.length === 0) modes.push('');
 
+    // Adjust streams/modes lengths to match
     while (modes.length > streams.length) {
         streams.push(streams[0]);
     }
@@ -43,6 +49,7 @@
         modes.push(modes[0]);
     }
 
+    // Set body class if multiple streams are provided
     if (streams.length > 1) {
         document.body.className = 'flex';
     }
@@ -50,12 +57,20 @@
     const background = params.get('background') !== 'false';
     const width = '1 0 ' + (params.get('width') || '320px');
 
+    // Notify parent window with postMessage, including all stream IDs
+    const message = `STREAM_UI_LOADED:${streams.join(',')}`;
+    window.parent.postMessage(message, "*");
+
+    // Create and append video elements for each stream
     for (let i = 0; i < streams.length; i++) {
         /** @type {VideoStream} */
         const video = document.createElement('video-stream');
         video.background = background;
-        // Disable video controls on html5 player
-        video.controls = false;
+        video.controls = false; // Disable controls on HTML5 player
+        video.muted = true; // Mute video to autoplay without issues
+        video.autoplay = true; // Autoplay the video
+        video.loop = true; // Loop the video
+        video.playsInline = true; // Ensure inline playback on mobile
         video.mode = modes[i] || video.mode;
         video.style.flex = width;
         video.src = new URL('api/ws?src=' + encodeURIComponent(streams[i]), location.href);
